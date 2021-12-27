@@ -2,14 +2,17 @@ package com.fearefull.multinavigation.ui.main
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.fearefull.multinavigation.ui.RouteScreen
+import com.fearefull.multinavigation.ui.MultiNavigationAppState
 import com.fearefull.multinavigation.ui.main.home.HomeScreen
 import com.fearefull.multinavigation.ui.main.other.OtherScreen
+import com.fearefull.multinavigation.ui.main.profile.ProfileNavigator
 import com.fearefull.multinavigation.ui.main.profile.ProfileScreen
+import com.fearefull.multinavigation.ui.main.profile.ProfileViewModel
 
 sealed class RouteScreenMain(val route: String) {
     object Home : RouteScreenMain("home")
@@ -32,21 +35,23 @@ sealed class RouteScreenMainLeaf(val route: String) {
 @Composable
 internal fun MainNavigation(
     modifier: Modifier = Modifier,
-    mainState: MainState
+    mainState: MainState,
+    appState: MultiNavigationAppState
 ) {
     NavHost(
         navController = mainState.navController,
         startDestination = RouteScreenMain.Home.route,
         modifier = modifier
     ) {
-        addHomeTopLevel(mainState)
-        addOtherTopLevel(mainState)
-        addProfileTopLevel(mainState)
+        addHomeTopLevel(mainState, appState)
+        addOtherTopLevel(mainState, appState)
+        addProfileTopLevel(mainState, appState)
     }
 }
 
 private fun NavGraphBuilder.addHomeTopLevel(
-    mainState: MainState
+    mainState: MainState,
+    appState: MultiNavigationAppState
 ) {
     navigation(
         route = RouteScreenMain.Home.route,
@@ -54,12 +59,13 @@ private fun NavGraphBuilder.addHomeTopLevel(
     ) {
         addHome(mainState, RouteScreenMain.Home)
         addOther(mainState, RouteScreenMain.Home)
-        addProfile(mainState, RouteScreenMain.Home)
+        addProfile(mainState, appState, RouteScreenMain.Home)
     }
 }
 
 private fun NavGraphBuilder.addOtherTopLevel(
-    mainState: MainState
+    mainState: MainState,
+    appState: MultiNavigationAppState
 ) {
     navigation(
         route = RouteScreenMain.Other.route,
@@ -67,12 +73,13 @@ private fun NavGraphBuilder.addOtherTopLevel(
     ) {
         addHome(mainState, RouteScreenMain.Other)
         addOther(mainState, RouteScreenMain.Other)
-        addProfile(mainState, RouteScreenMain.Other)
+        addProfile(mainState, appState, RouteScreenMain.Other)
     }
 }
 
 private fun NavGraphBuilder.addProfileTopLevel(
-    mainState: MainState
+    mainState: MainState,
+    appState: MultiNavigationAppState
 ) {
     navigation(
         route = RouteScreenMain.Profile.route,
@@ -80,7 +87,7 @@ private fun NavGraphBuilder.addProfileTopLevel(
     ) {
         addHome(mainState, RouteScreenMain.Profile)
         addOther(mainState, RouteScreenMain.Profile)
-        addProfile(mainState, RouteScreenMain.Profile)
+        addProfile(mainState, appState, RouteScreenMain.Profile)
     }
 }
 
@@ -104,9 +111,22 @@ private fun NavGraphBuilder.addOther(
 
 private fun NavGraphBuilder.addProfile(
     mainState: MainState,
+    appState: MultiNavigationAppState,
     root: RouteScreenMain
 ) {
     composable(RouteScreenMainLeaf.Profile.createRoute(root)) {
-        ProfileScreen()
+        val viewModel: ProfileViewModel = hiltViewModel()
+        ProfileScreen(
+            state = viewModel.viewState.value,
+            effectFlow = viewModel.effect,
+            onEventSent = { event -> viewModel.setEvent(event) },
+            onNavigationSent = { navigationEffect ->
+                when(navigationEffect) {
+                    is ProfileNavigator.Effect.Navigation.ToAuth -> {
+                        appState.navigateToAuth(it)
+                    }
+                }
+            }
+        )
     }
 }

@@ -6,9 +6,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
+import com.fearefull.multinavigation.ui.MultiNavigationAppState
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    appState: MultiNavigationAppState
+) {
     val mainState = rememberMainState()
     Scaffold(
         bottomBar = {
@@ -20,7 +23,7 @@ fun MainScreen() {
             )
         }
     ) {
-        MainNavigation(mainState = mainState)
+        MainNavigation(mainState = mainState, appState = appState)
     }
 }
 
