@@ -1,5 +1,5 @@
 ext {
-    compose_version = '1.1.0-rc01'
+    compose_version = '1.1.0-beta03'
     dagger_hilt_version = '2.40.1'
 }
 buildscript {
